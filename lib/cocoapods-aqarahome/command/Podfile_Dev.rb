@@ -1,7 +1,7 @@
 module Pod
   class Podfile
     module DSL
-      require 'cocoapods-aqarahome/Utils/Color'
+
       public
 
       def dev_pods(pods, branch = 'aqara')
@@ -36,13 +36,13 @@ module Pod
 
       def pull_latest_code_and_resolve_conflict(pods)
         # 1、Podfile.lock
-        puts "正在清理Podfile.lock中私有库的commit信息...".pink
+        puts "正在清理Podfile.lock中私有库的commit信息...".red
         rewrite_lock_file(pods, Config.instance.lockfile_path)
-        puts "Podfile.lock中私有库的commit信息已清除！".light_blue
+        puts "Podfile.lock中私有库的commit信息已清除！".green
         # 2、Manifest.lock
-        puts "正在清理Manifest.lock中私有库的commit信息...".pink
+        puts "正在清理Manifest.lock中私有库的commit信息...".red
         rewrite_lock_file(pods, Config.instance.sandbox.manifest_path)
-        puts "Manifest.lock中私有库的commit信息已清除！".light_blue
+        puts "Manifest.lock中私有库的commit信息已清除！".green
       end
 
       def rewrite_lock_file(pods, lock_path)
