@@ -10,6 +10,10 @@ module Pod
           #   pod name, :git => "https://xyz.com/ios/#{name}.git", :branch => "#{branch}"
           # end
           pull_latest_code_and_resolve_conflict(pods)
+          podStr = pods.join(", ")
+          puts "成功清除私有库".green + "#{podStr}".yellow + "的缓存数据".green
+          args = ['clean',"--all"]
+          Pod::Command::Cache.run(args)
           # puts "lebbay: using remote pods with branch: #{branch}".green
         else
           # 自定义开发目录
