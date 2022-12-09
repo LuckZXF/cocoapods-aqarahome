@@ -12,8 +12,10 @@ module Pod
           pull_latest_code_and_resolve_conflict(pods)
           podStr = pods.join(", ")
           puts "成功清除私有库".green + "#{podStr}".yellow + "的缓存数据".green
-          args = ['clean',"--all"]
-          Pod::Command::Cache.run(args)
+          pods.each do |pod|
+            args = ['clean',pod]
+            Pod::Command::Cache.run(args)
+          end
           # puts "lebbay: using remote pods with branch: #{branch}".green
         else
           # 自定义开发目录
@@ -34,17 +36,29 @@ module Pod
         puts '|========================================================================|'.red
       end
 
+      def code_signing_allow_no!
+        post_install do |installer|
+          installer.pods_project.targets.each do |target|
+            if target.respond_to?(:product_type) and target.product_type == "com.apple.product-type.bundle"
+              target.build_configurations.each do |config|
+                config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+              end
+            end
+          end
+        end
+      end
+
       #--------------------------------------#
 
       private
 
       def pull_latest_code_and_resolve_conflict(pods)
         # 1、Podfile.lock
-        puts "正在清理Podfile.lock中私有库的commit信息...".red
+        puts "正在清理Podfile.lock中私有库的commit信息..."
         rewrite_lock_file(pods, Config.instance.lockfile_path)
         puts "Podfile.lock中私有库的commit信息已清除！".green
         # 2、Manifest.lock
-        puts "正在清理Manifest.lock中私有库的commit信息...".red
+        puts "正在清理Manifest.lock中私有库的commit信息..."
         rewrite_lock_file(pods, Config.instance.sandbox.manifest_path)
         puts "Manifest.lock中私有库的commit信息已清除！".green
       end
