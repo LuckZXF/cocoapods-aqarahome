@@ -13,7 +13,7 @@ module Pod
           podStr = pods.join(", ")
           puts "成功清除私有库".green + "#{podStr}".yellow + "的缓存数据".green
           pods.each do |pod|
-            args = ['clean',pod]
+            args = ['clean',pod, "--all"]
             Pod::Command::Cache.run(args)
           end
           # puts "lebbay: using remote pods with branch: #{branch}".green
