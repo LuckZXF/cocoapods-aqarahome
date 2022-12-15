@@ -4,18 +4,23 @@ module Pod
 
       public
 
-      def dev_pods(pods, branch = 'aqara')
+      def dev_pods(pods, git_pull = false, branch = 'aqara')
         if branch.length > 0
+          if git_pull
+            pull_local_sdk_origin_source(pods)
+          elsif
+            pull_latest_code_and_resolve_conflict(pods)
+            podStr = pods.join(", ")
+            puts "成功清除私有库".green + "#{podStr}".yellow + "的缓存数据".green
+            pods.each do |pod|
+              args = ['clean',pod, "--all"]
+              Pod::Command::Cache.run(args)
+            end
+          end
           # pods.each do |name|
           #   pod name, :git => "https://xyz.com/ios/#{name}.git", :branch => "#{branch}"
           # end
-          pull_latest_code_and_resolve_conflict(pods)
-          podStr = pods.join(", ")
-          puts "成功清除私有库".green + "#{podStr}".yellow + "的缓存数据".green
-          pods.each do |pod|
-            args = ['clean',pod, "--all"]
-            Pod::Command::Cache.run(args)
-          end
+
           # puts "lebbay: using remote pods with branch: #{branch}".green
         else
           # 自定义开发目录
@@ -51,6 +56,21 @@ module Pod
       #--------------------------------------#
 
       private
+
+      def pull_local_sdk_origin_source(pods)
+        puts Config.instance.podfile_path.parent.parent
+
+        Dir.foreach(Config.instance.podfile_path.parent.parent) do |entry|
+          subPath = Config.instance.podfile_path.parent.parent + entry
+          if File::directory?(subPath)
+            pods.each do |pod|
+              next unless File::exists?("#{subPath}/#{pod}.podspec")
+              puts "正在拉取" + "#{pod}".green + "仓库代码..."
+              system "cd #{subPath};git pull"
+            end
+          end
+        end
+      end
 
       def pull_latest_code_and_resolve_conflict(pods)
         # 1、Podfile.lock
