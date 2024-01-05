@@ -50,7 +50,7 @@ module Pod
               end
             end
             if target.name == "Pods-AqaraHome"
-              puts "Updating #{target.name} OTHER_LDFLAGS To fit Xcode15"
+              puts "Updating #{target.name} OTHER_LDFLAGS To fit Xcode15.0.1+"
               target.build_configurations.each do |config|
                 xcconfig_path = config.base_configuration_reference.real_path
 
@@ -61,11 +61,13 @@ module Pod
                   f.each_line{|l|
                     s=""
                     if l.include?('iconv.2.4.0')
+                      len = l.length
                       s+=l.gsub!("iconv.2.4.0", "iconv.2")
                       #seek back to the beginning of the line.
-                      f.seek(-l.length, IO::SEEK_CUR)
+                      f.seek(-len, IO::SEEK_CUR)
                       #overwrite line with spaces and add a newline char
                       f.write(s * 1)
+                      f.write(' ' * (len - l.length - 1))
                       break
                     end
                   }
