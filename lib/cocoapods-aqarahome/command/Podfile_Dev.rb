@@ -49,6 +49,29 @@ module Pod
                 config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
               end
             end
+            if target.name == "Pods-AqaraHome"
+              puts "Updating #{target.name} OTHER_LDFLAGS To fit Xcode15"
+              target.build_configurations.each do |config|
+                xcconfig_path = config.base_configuration_reference.real_path
+
+                # read from xcconfig to build_settings dictionary
+                build_settings = Hash[*File.read(xcconfig_path).lines.map{|x| x.split(/\s*=\s*/, 2)}.flatten]
+
+                File.open(xcconfig_path,'r+'){|f|
+                  f.each_line{|l|
+                    s=""
+                    if l.include?('iconv.2.4.0')
+                      s+=l.gsub!("iconv.2.4.0", "iconv.2")
+                      #seek back to the beginning of the line.
+                      f.seek(-l.length, IO::SEEK_CUR)
+                      #overwrite line with spaces and add a newline char
+                      f.write(s * 1)
+                      break
+                    end
+                  }
+                }
+              end
+            end
           end
         end
       end

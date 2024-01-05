@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cocoapods-aqarahome (0.0.5)
+    cocoapods-aqarahome (0.0.6)
       claide (>= 1.0.2, < 2.0)
 
 GEM
