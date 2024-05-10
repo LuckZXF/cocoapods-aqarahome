@@ -89,7 +89,7 @@ module Pod
           subPath = Config.instance.podfile_path.parent.parent + entry
           if File::directory?(subPath)
             pods.each do |pod|
-              next unless File::exists?("#{subPath}/#{pod}.podspec")
+              next unless File::exist?("#{subPath}/#{pod}.podspec")
               puts "正在拉取" + "#{pod}".green + "仓库代码..."
               system "cd #{subPath};git pull"
             end
