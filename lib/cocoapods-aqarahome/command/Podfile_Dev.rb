@@ -9,13 +9,13 @@ module Pod
           if git_pull
             pull_local_sdk_origin_source(pods)
           elsif
-            pull_latest_code_and_resolve_conflict(pods)
             podStr = pods.join(", ")
             puts "成功清除私有库".green + "#{podStr}".yellow + "的缓存数据".green
             pods.each do |pod|
               args = ['clean',pod, "--all"]
               Pod::Command::Cache.run(args)
             end
+            pull_latest_code_and_resolve_conflict(pods)
           end
           # pods.each do |name|
           #   pod name, :git => "https://xyz.com/ios/#{name}.git", :branch => "#{branch}"
