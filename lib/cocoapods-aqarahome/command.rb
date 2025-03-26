@@ -5,6 +5,7 @@ module CocoapodsAqarahome
   # The primary Command for VFS.
   class Command < CLAide::Command
     require 'cocoapods-aqarahome/command/aqarahome'
+    require 'cocoapods-aqarahome/command/build'
 
     self.abstract_command = false
     self.command = 'aqarahome'

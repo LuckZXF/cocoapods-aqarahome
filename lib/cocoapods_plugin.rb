@@ -1,4 +1,5 @@
 require 'cocoapods-aqarahome'
+require 'cocoapods-aqarahome/command/build'
 module Pod
   # hook
   @HooksManager = HooksManager
