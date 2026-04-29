@@ -41,6 +41,61 @@ module Pod
         puts '|========================================================================|'.red
       end
 
+      # Registers +post_install+ and +post_integrate+ for Xcode / RN upgrades, legacy pods,
+      # privacy manifest dedupe, etc. Call once in the Podfile (after +require+ of react_native_pods).
+      #
+      # @param react_native_path [String] second argument to +react_native_post_install+ when no block is passed
+      # @param aggregate_target [String] CocoaPods aggregate target name (default +Pods-AqaraHome+)
+      # @param user_target [String] main app target name (default +AqaraHome+)
+      # @param testadhoc_config_name [String] RN dev flags are applied to React pods for this configuration only
+      # @param privacy_path_filter [String] substring used to strip duplicate +PrivacyInfo.xcprivacy+ inputs
+      # @param privacy_resource_line_regex [Regexp, nil] override for the +Pods-*-resources.sh+ line removal
+      # @yield [installer] optional; if given, called first inside +post_install+ (use for +react_native_post_install+)
+      def aqarahome_xcode_compat_post_hooks!(
+        react_native_path: 'node_modules/react-native',
+        aggregate_target: 'Pods-AqaraHome',
+        user_target: 'AqaraHome',
+        testadhoc_config_name: 'TestADHoc',
+        privacy_path_filter: 'LMNewSensorsAnalytics',
+        privacy_resource_line_regex: nil,
+        &react_native_block
+      )
+        patch_options = {
+          aggregate_target: aggregate_target,
+          user_target: user_target,
+          testadhoc_config_name: testadhoc_config_name,
+          privacy_path_filter: privacy_path_filter
+        }
+        patch_options[:privacy_resource_line_regex] = privacy_resource_line_regex if privacy_resource_line_regex
+
+        post_install do |installer|
+          if block_given?
+            react_native_block.call(installer)
+          elsif respond_to?(:react_native_post_install, true)
+            react_native_post_install(installer, react_native_path)
+          else
+            message = [
+              'aqarahome_xcode_compat_post_hooks!: `react_native_post_install` is not defined.',
+              'Require react_native/scripts/react_native_pods in the Podfile, or pass a block, e.g.:',
+              "  aqarahome_xcode_compat_post_hooks! { |i| react_native_post_install(i, 'node_modules/react-native') }"
+            ].join("\n")
+            raise(Pod::Informative, message) if defined?(Pod::Informative)
+
+            raise message
+          end
+
+          CocoapodsAqarahome::PostInstallPatches.apply_post_install(installer, patch_options)
+        end
+
+        post_integrate do |installer|
+          CocoapodsAqarahome::PostInstallPatches.apply_post_integrate(
+            installer,
+            user_target: user_target,
+            privacy_path_filter: privacy_path_filter
+          )
+        end
+      end
+
       def code_signing_allow_no!
         post_install do |installer|
           installer.pods_project.targets.each do |target|
