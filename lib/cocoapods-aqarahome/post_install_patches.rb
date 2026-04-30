@@ -166,6 +166,7 @@ module CocoapodsAqarahome
         end
       end
 
+      patch_testadhoc_rn_devtools_inspector(installer, config_name: testadhoc_config)
       patch_fmt_base_header.call
 
       wcdb_objc_support_files.each do |path|
@@ -345,6 +346,41 @@ module CocoapodsAqarahome
         end
 
         user_project.save
+      end
+    end
+
+    def patch_testadhoc_rn_devtools_inspector(installer, config_name:)
+      # RCT_DEV enables most DevSupport code, but DevTools target registration is
+      # also guarded by InspectorFlags in React-jsinspector.
+      rn_devtools_target_definitions = {
+        'React-Core' => ['RCT_ENABLE_INSPECTOR=1'],
+        'React-CoreModules' => ['RCT_ENABLE_INSPECTOR=1'],
+        'React-hermes' => ['HERMES_ENABLE_DEBUGGER=1'],
+        'React-RuntimeHermes' => ['HERMES_ENABLE_DEBUGGER=1'],
+        'React-jsinspector' => [
+          'REACT_NATIVE_DEBUGGER_ENABLED=1',
+          'REACT_NATIVE_DEBUGGER_ENABLED_DEVONLY=1'
+        ]
+      }
+
+      rn_devtools_target_definitions.each do |target_name, required_definitions|
+        target = installer.pods_project.targets.find { |pod_target| pod_target.name == target_name }
+        next unless target
+
+        config = target.build_configurations.find { |build_config| build_config.name == config_name }
+        next unless config
+
+        definitions = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || '$(inherited)'
+        definitions = [definitions] unless definitions.is_a?(Array)
+        definitions = definitions.flat_map { |value| value.to_s.split(/\s+/) }.reject(&:empty?)
+
+        required_definitions.each do |required_definition|
+          key = required_definition.split('=').first
+          definitions.reject! { |value| value.start_with?("#{key}=") }
+          definitions << required_definition
+        end
+
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = definitions.uniq
       end
     end
 
